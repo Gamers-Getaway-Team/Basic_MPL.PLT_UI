@@ -80,8 +80,8 @@ class plot_Panel(tk.CTkFrame):
         self.legend_Toggle = tk.CTkCheckBox(self.options_Panel, text='Legend')
         self.legend_Toggle.select()
         self.legend_Toggle.pack(fill='x', pady=1, padx=1)
+        self.add_Line_Button = tk.CTkButton(self.options_Panel, text='Add Line', command=lambda: self.newLine()).pack(pady=2)
         if self.primary != 'SubPlot':
-            self.add_Line_Button = tk.CTkButton(self.options_Panel, text='Add Line', command=lambda: self.newLine()).pack(pady=2)
             self.rows_Entry = tk.CTkEntry(self.options_Panel, placeholder_text='# Rows')
             self.rows_Entry.bind('<KeyRelease>', lambda null: self.settings.update({'Rows': int(self.rows_Entry.get())}) if self.rows_Entry.get().isdigit() else 1)
             self.rows_Entry.pack()
@@ -131,7 +131,8 @@ class plot_Panel(tk.CTkFrame):
     def removeSubPlot(self, subplotID):
         self.subplots[subplotID - 1].destroy()
         self.subplots.pop(subplotID - 1)
-        self.settings.update({'Columns': self.settings['Columns'] - 1})
+        if self.settings['Columns'] > 1:
+            self.settings.update({'Columns': self.settings['Columns'] - 1})
         self.columns_Entry.delete(0, tk.END)
         self.columns_Entry.insert(0, str(self.settings['Columns']))
         if len(self.subplots) == 0:
@@ -295,4 +296,5 @@ class line_Entry(tk.CTkFrame):
             self.status_Bool_Label.configure(text=f'{self.is_Ready}', text_color='red')
 
 app = main()
+
 app.mainloop()
