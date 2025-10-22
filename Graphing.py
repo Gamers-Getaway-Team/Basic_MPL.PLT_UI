@@ -16,14 +16,15 @@ class main (tk.CTk):
     def __init__(self):
         super().__init__()
         self.geometry('1000x800')
-        self.title('GG Team ploting Utility')
+        self.title('GG Team Matplotlib Utility')
         self.configure(fg_color='grey')
         
         self.control_Panel = tk.CTkFrame(self)
         self.new_Plot_Button = tk.CTkButton(self.control_Panel, text='Add plot', command=lambda: self.newPlot()).pack(side='left')
+        self.collapse_All_Plots_button = tk.CTkButton(self.control_Panel, text='Collapse All Plots', command=lambda: self.collapseAllPlots()).pack(side='left', padx=5)
         self.control_Panel.pack(fill='x')
         
-        self.plot_List_Panel = tk.CTkScrollableFrame(self, fg_color='black')
+        self.plot_List_Panel = tk.CTkScrollableFrame(self, fg_color='black', scrollbar_button_color='white')
         self.plot_List_Panel.pack(expand=True, fill='both')
         self.plot_Array = []
         self.plot_Array.append(plot_Panel(self.plot_List_Panel))
@@ -39,6 +40,10 @@ class main (tk.CTk):
                 self.plot_Array[x - 1].destroy()
                 self.plot_Array.pop(x -1)
                 break
+    
+    def collapseAllPlots(self):
+        for plot in self.plot_Array:
+            plot.showDetails(True)
         
             
 class plot_Panel(tk.CTkFrame):
@@ -67,7 +72,9 @@ class plot_Panel(tk.CTkFrame):
         self.top_Panel.pack(expand=True, fill='x')
         
         self.bottom_Panel = tk.CTkFrame(self)
-        self.options_Panel = tk.CTkFrame(self.bottom_Panel)
+        self.options_And_Lines_Panel = tk.CTkFrame(self.bottom_Panel)
+        self.options_And_Lines_Panel.pack(expand=True, fill='x')
+        self.options_Panel = tk.CTkFrame(self.options_And_Lines_Panel)
         self.title_Entry = tk.CTkEntry(self.options_Panel, placeholder_text='Title of Plot')
         self.title_Entry.bind('<KeyRelease>', lambda null: self.settings.update({'Title': self.title_Entry.get()}))
         self.title_Entry.pack()
@@ -87,41 +94,51 @@ class plot_Panel(tk.CTkFrame):
         if self.primary != 'SubPlot':
             self.rows_Entry = tk.CTkEntry(self.options_Panel, placeholder_text='# Rows')
             self.rows_Entry.bind('<KeyRelease>', lambda null: self.settings.update({'Rows': int(self.rows_Entry.get())}) if self.rows_Entry.get().isdigit() else 1)
-            self.rows_Entry.pack()
+            self.rows_Entry.pack( pady=1)
             self.columns_Entry = tk.CTkEntry(self.options_Panel, placeholder_text='# Columns')
             self.columns_Entry.bind('<KeyRelease>', lambda null: self.settings.update({'Columns': int(self.columns_Entry.get())}) if int(self.columns_Entry.get()) else 1)
-            self.columns_Entry.pack()
+            self.columns_Entry.pack(pady=1)
             self.add_SubPlot_button = tk.CTkButton(self.options_Panel, text='Add SubPlot', command=lambda: self.newSubplot()).pack(pady=2)
             self.add_Axis_button = tk.CTkButton(self.options_Panel, text='Add Axis', command=lambda: self.newAxis()).pack(pady=2)
-            self.plot_Button = tk.CTkButton(self.options_Panel, text='Plot', fg_color='green', hover_color='darkgreen', command=lambda:self.plotLines()).pack(pady=2)
+            self.plot_Button = tk.CTkButton(self.options_Panel, text='Plot', fg_color='green', hover_color='darkgreen', command=lambda:self.plotLines())
+            self.plot_Button.pack(pady=2)
             self.plot_All_Button = tk.CTkButton(self.options_Panel, text='Plot All Plots', fg_color='green', hover_color='darkgreen', state='disabled', command=lambda: self.plotAllPlots())
             self.plot_All_Button.pack(pady=2)
         self.options_Panel.pack(side='left', anchor='n', pady=5)
         
-        self.lines_Panel = tk.CTkScrollableFrame(self.bottom_Panel, fg_color='grey', height=400)
-        self.lines_Panel.pack(expand=True, fill='both')
+        self.lines_Panel = tk.CTkScrollableFrame(self.options_And_Lines_Panel, fg_color='grey', scrollbar_button_color='white', height=400)
+        self.lines_Panel_Options_Panel = tk.CTkFrame(self.lines_Panel, fg_color='lightgrey')
+        self.lines_Panel_Options_Panel.pack(expand=True, fill='x')
+        self.show_Details_all_Button = tk.CTkButton(self.lines_Panel_Options_Panel, text='Collapse All', bg_color='grey', command=lambda: self.collapseAllLines()).pack(side='left')
+        self.lines_Panel.pack(expand=True, fill='both', pady=2)
         self.lines_Array = [line_Entry(self.lines_Panel, self)]
         self.lines_Array[0].pack(expand=True, fill='both', pady=5)
         
-        self.subplots_Panel = tk.CTkScrollableFrame(self.bottom_Panel, fg_color='grey')
+        self.subplots_Panel = tk.CTkScrollableFrame(self.bottom_Panel, fg_color='grey', scrollbar_button_color='white')
         self.bottom_Panel.pack(expand=True, side='bottom', fill='x')
         
-    def showDetails(self):
-        if not self.bottom_Panel.winfo_ismapped():
+    def showDetails(self, forced=False):
+        if not forced and not self.bottom_Panel.winfo_ismapped():
             self.bottom_Panel.pack(expand=True, fill='x')
             self.show_Details_Button.configure(text='Collapse')
         else:
             self.bottom_Panel.pack_forget()
             self.show_Details_Button.configure(text='Expand')
         
+    def collapseAllLines(self):
+        for line in self.lines_Array:
+            line.showDetails(True)
+        
     def newLine(self):
         self.lines_Array.append(line_Entry(self.lines_Panel, self, len(self.lines_Array) + 1))
         self.lines_Array[len(self.lines_Array) - 1].pack(expand=True, fill='both', pady=5)
+        if self.plot_Button.cget('state') == 'disabled':
+            self.plot_Button.configure(state='normal')
         
     def newSubplot(self):
         self.plot_All_Button.configure(state='normal')
         self.subplots.append(plot_Panel(self.subplots_Panel, self, plot_Panel_Title_Color='purple'))
-        self.subplots[len(self.subplots) - 1].pack(expand=True, fill='x', padx=5)
+        self.subplots[len(self.subplots) - 1].pack(expand=True, fill='x', padx=1)
         self.settings.update({'Columns': self.settings['Columns'] + 1})
         self.columns_Entry.delete(0, tk.END)
         self.columns_Entry.insert(0, str(self.settings['Columns']))
@@ -133,6 +150,8 @@ class plot_Panel(tk.CTkFrame):
             if self.lines_Array[x - 1].ID == line_ID:
                 self.lines_Array[x - 1].destroy()
                 self.lines_Array.pop(x - 1)
+            if self.lines_Array == []:
+                self.plot_Button.configure(state='disabled')
     
     def removeSubPlot(self, subplot_ID):
         for x in range(0, len(self.subplots)):
@@ -206,6 +225,9 @@ class line_Entry(tk.CTkFrame):
         self.top_Panel = tk.CTkFrame(self)
         self.show_Details_Button = tk.CTkButton(self.top_Panel, text='Collapse', command=lambda: self.showDetails())
         self.show_Details_Button.pack(side='left')
+        self.status_Label = tk.CTkLabel(self.top_Panel, text='Ready: ', fg_color='lightgreen').pack(side='left')
+        self.status_Bool_Label = tk.CTkLabel(self.top_Panel, text=f'{self.is_Ready}', text_color='red', fg_color='lightgreen')
+        self.status_Bool_Label.pack(side='left')
         self.line_Label = tk.CTkLabel(self.top_Panel, text=f'--- Line {self.ID} {parent.primary} {parent.ID} ---', fg_color='lightgreen')
         self.line_Label.pack(expand=True, side='left', fill='x')
         self.remove_Line_Button = tk.CTkButton(self.top_Panel, text='Remove', fg_color='red', hover_color='darkred', command=lambda: parent.removeLine(self.ID)).pack(side='right')
@@ -227,9 +249,6 @@ class line_Entry(tk.CTkFrame):
         self.maker_Type_Label = tk.CTkLabel(self.options_Panel, text='Marker Type: ', anchor='e').grid(column=3, row=0)
         self.marker_Type = tk.CTkOptionMenu(self.options_Panel, values=['Point', 'Circle'], command=lambda null: self.updateLineSettings())
         self.marker_Type.grid(column=4, row=0)
-        self.status_Label = tk.CTkLabel(self.options_Panel, text='Ready: ').grid(column=3, row=1, sticky='e')
-        self.status_Bool_Label = tk.CTkLabel(self.options_Panel, text=f'{self.is_Ready}', text_color='red')
-        self.status_Bool_Label.grid(column=4, row=1, sticky='w')
         self.options_Panel.pack(fill='x', pady=1)
         self.bottom_Panel.pack(expand=True, fill='x')
         
@@ -251,8 +270,8 @@ class line_Entry(tk.CTkFrame):
         
         self.bottom_Panel.pack(expand=True, fill='x')
         
-    def showDetails(self):
-        if not self.bottom_Panel.winfo_ismapped():
+    def showDetails(self, forced=False):
+        if not forced and not self.bottom_Panel.winfo_ismapped():
             self.bottom_Panel.pack(expand=True, fill='x')
             self.show_Details_Button.configure(text='Collapse')
         else:
