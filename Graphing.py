@@ -34,8 +34,11 @@ class main (tk.CTk):
         self.plot_Array[len(self.plot_Array) - 1].pack(anchor='n', expand=True, fill='x', pady=2)
     
     def removePlot(self, plot_ID):
-        self.plot_Array[plot_ID - 1].destroy()
-        self.plot_Array.pop(plot_ID - 1)
+        for x in range(0, len(self.plot_Array)):
+            if self.plot_Array[x - 1].ID == plot_ID:
+                self.plot_Array[x - 1].destroy()
+                self.plot_Array.pop(x -1)
+                break
         
             
 class plot_Panel(tk.CTkFrame):
@@ -89,6 +92,7 @@ class plot_Panel(tk.CTkFrame):
             self.columns_Entry.bind('<KeyRelease>', lambda null: self.settings.update({'Columns': int(self.columns_Entry.get())}) if int(self.columns_Entry.get()) else 1)
             self.columns_Entry.pack()
             self.add_SubPlot_button = tk.CTkButton(self.options_Panel, text='Add SubPlot', command=lambda: self.newSubplot()).pack(pady=2)
+            self.add_Axis_button = tk.CTkButton(self.options_Panel, text='Add Axis', command=lambda: self.newAxis()).pack(pady=2)
             self.plot_Button = tk.CTkButton(self.options_Panel, text='Plot', fg_color='green', hover_color='darkgreen', command=lambda:self.plotLines()).pack(pady=2)
             self.plot_All_Button = tk.CTkButton(self.options_Panel, text='Plot All Plots', fg_color='green', hover_color='darkgreen', state='disabled', command=lambda: self.plotAllPlots())
             self.plot_All_Button.pack(pady=2)
@@ -125,12 +129,17 @@ class plot_Panel(tk.CTkFrame):
             self.subplots_Panel.pack(expand=True, fill='x', anchor='s')
     
     def removeLine(self, line_ID):
-        self.lines_Array[line_ID - 1].destroy()
-        self.lines_Array.pop(line_ID - 1)
+        for x in range(0, len(self.lines_Array)):
+            if self.lines_Array[x - 1].ID == line_ID:
+                self.lines_Array[x - 1].destroy()
+                self.lines_Array.pop(x - 1)
     
-    def removeSubPlot(self, subplotID):
-        self.subplots[subplotID - 1].destroy()
-        self.subplots.pop(subplotID - 1)
+    def removeSubPlot(self, subplot_ID):
+        for x in range(0, len(self.subplots)):
+            if self.subplots[x - 1].ID == subplot_ID:
+                self.subplots[x - 1].destroy()
+                self.subplots.pop(x - 1)
+                break
         if self.settings['Columns'] > 1:
             self.settings.update({'Columns': self.settings['Columns'] - 1})
         self.columns_Entry.delete(0, tk.END)
@@ -169,6 +178,9 @@ class plot_Panel(tk.CTkFrame):
             if self.settings['Legend'] == True:
                 self.plot.legend()
             self.plot.show()
+    
+    def newAxis(self):
+        self.plot.axes.secondary_yaxis('right')
              
     def removeSelf(self):
         if self.primary != 'SubPlot':
@@ -296,5 +308,4 @@ class line_Entry(tk.CTkFrame):
             self.status_Bool_Label.configure(text=f'{self.is_Ready}', text_color='red')
 
 app = main()
-
 app.mainloop()
